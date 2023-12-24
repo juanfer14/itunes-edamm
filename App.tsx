@@ -1,30 +1,30 @@
 import React, {useContext, createContext, useState} from 'react';
-import { Appearance, TouchableOpacity,TouchableWithoutFeedback, useColorScheme } from 'react-native';
+import { TouchableOpacity, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './store';
 import { StatusBar } from 'expo-status-bar';
-import { Discover } from './components/Discover';
+
+
+import { DiscoverScreen } from './components/DiscoverScreen';
 import { Favs } from './components/Favs';
 import { Switch } from './components/Switch';
-import { SongItem } from './components/SongItem';
+
 import { lightTheme, darkTheme } from './features/styles/themes'
 
 // Importo tabs, para navegar entre las screens de busqueda de
 // artistas y las canciones favoritas de los artistas
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
-import { TamaguiProvider, Button } from 'tamagui'
+import { TamaguiProvider } from 'tamagui'
 import config from './tamagui.config'
-
-
-
-
 
 
 
@@ -40,9 +40,6 @@ const switchIcon = ({color, size}) => (
    <MaterialCommunityIcons name="lightbulb-outline" size={size} color={color} /> 
 );
 const tabOpacity = (props) => <TouchableOpacity {...props} />
-
-
-
 
 
 export default function App() {
@@ -68,11 +65,10 @@ export default function App() {
     <TamaguiProvider config={config}>
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          
           <SafeAreaProvider>
             <NavigationContainer theme={color === 'dark' ? darkTheme : lightTheme}>
-              <Tab.Navigator initialRouteName="Discover" screenOptions={{ headerShown: false, tabBarStyle: { height: 60 } }}  > 
-                <Tab.Screen name="Discover" component={Discover} options={{ tabBarIcon: searchIcon, tabBarButton: tabOpacity, tabBarLabel: '' }} />
+              <Tab.Navigator initialRouteName="DiscoverScreen" screenOptions={{ headerShown: false, tabBarStyle: { height: 60 } }}  > 
+                <Tab.Screen name="DiscoverScreen" component={DiscoverScreen} options={{ tabBarIcon: searchIcon, tabBarButton: tabOpacity, tabBarLabel: '' }} />
                 <Tab.Screen name="Favs" component={Favs} options={{ tabBarIcon: favIcon, tabBarButton: tabOpacity, tabBarLabel: '' }} />
                 {/*<Tab.Screen name="Example" component={SongItem} />*/}
                 <Tab.Screen name="Switch" component={Switch} options={{ tabBarIcon: switchIcon, tabBarButton: tabSwitch, tabBarLabel: '' }} />
