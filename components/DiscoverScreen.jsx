@@ -16,7 +16,7 @@ export function DiscoverScreen(){
     return (
         <Stack.Navigator initialRouteName="Discover">
             <Stack.Screen name="Discover" component={Discover} options={{ headerShown: false }}></Stack.Screen>
-            <Stack.Screen name="Search" component={Search}></Stack.Screen>
+            <Stack.Screen name="Search" component={Search} options={{ title: "Buscando"}}></Stack.Screen>
         </Stack.Navigator>
     )
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Button, Image, Dimensions, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Image, Dimensions, ActivityIndicator, TouchableOpacity} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 import { FontAwesome } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,8 +9,13 @@ import { addFav, removeFav } from '../features/favs/favsSlice';
 
 
 import { useFonts } from "expo-font";
-import { Input, YStack, Text } from 'tamagui'
+import { Input, YStack, Text, ScrollView, ListItem, XStack, Button } from 'tamagui'
 
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+
+
+//import { ChevronRight, Cloud, Moon, Star, Sun } from '@tamagui/lucide-icons'
 
 export function Discover({ navigation }) {
   const [imageUrl, setImageUrl] = useState(null);
@@ -50,25 +56,42 @@ export function Discover({ navigation }) {
 
   const buscarArtista = () => {
     console.log(nombreArtista);
-    navigation.navigate('Search', {buscado: nombreArtista});
+    navigation.navigate('Search', { originalTermSearch: nombreArtista });
   }
 
 
   return (
       loaded ?
       <SafeAreaView style={styles.main}>
-        <YStack style={styles.welcome} alignItems="center" space="$2">
-          <Image style={styles.image} source={iconItunes} />
-          <Text style={styles.text} size="$6">Buscador de canciones en Itunes</Text>
-          <Input 
-              style={styles.input} 
-              size="$6" 
-              borderWidth={1} 
-              placeholder="Ingrese el nombre del artista" 
-              value={nombreArtista}
-              onChangeText={(text) => setNombreArtista(text)}
-              onSubmitEditing={buscarArtista}/>
-        </YStack>
+        <ScrollView keyboardShouldPersistTaps={'handled'} style={styles.scroll} contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}>
+          <YStack style={styles.welcome} alignItems="center" space="$4">
+              <Image style={styles.image} source={iconItunes} />
+              <Text style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
+              
+              <View style={styles.container}>
+                <Input
+                        style={styles.input}
+                        size="$5" 
+                        borderWidth={1} 
+                        placeholder="Ingrese el nombre del artista" 
+                        value={nombreArtista}
+                        onChangeText={(text) => setNombreArtista(text)}
+                        onSubmitEditing={buscarArtista}
+                />
+                { nombreArtista ? (
+                    <TouchableOpacity style={styles.clearButton} onPress={() => setNombreArtista('')} >
+                      <Icon name="close" size={40} color="gray" />
+                    </TouchableOpacity>
+                  ) : null
+                }
+              </View>
+              
+              
+
+
+            
+          </YStack>
+        </ScrollView>
 
         {/*}
         <View style={styles.imageHolder}>
@@ -96,8 +119,6 @@ export function Discover({ navigation }) {
           </View>
         )}
         {*/}
-
-
       </SafeAreaView>
       : null
     
@@ -107,9 +128,14 @@ export function Discover({ navigation }) {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row'
+  },
+  scroll: {
+    flex: 1,
+    height: "100%"
   },
   welcome:{
+    flex: 1,
     top: 30
   },
   image: {
@@ -118,17 +144,16 @@ const styles = StyleSheet.create({
     height: "30%",
   },
   text: { 
-    fontSize: 50,
-    fontWeight: 800,
+    fontSize: 40,
     top: 0,
-    left: 10,
+    left: 0,
     width: "95%",
-    textAlign: 'left',
+    textAlign: 'center',
   },
-  
   input: {
-    top: 10,
-    width: '90%'
+    flex: 1,
+    flexGrow: 1,
+
   },
   imageHolder: {
     flex: 1,
@@ -157,6 +182,18 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+
+  },
+  clearButton: {
+    position: 'absolute',
+    top: 0,
+    right: 20,
+    padding: 5,
   },
 });
 
