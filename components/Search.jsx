@@ -1,29 +1,51 @@
 import React, { useEffect, useState } from 'react'
 import { View, ScrollView, StyleSheet, ActivityIndicator, Dimensions} from 'react-native';
-
-import { Button, Text, YGroup, Separator, Spinner, YStack } from 'tamagui'
+import { useSelector, useDispatch } from 'react-redux';
+import { ListItem, Theme, Button, Text, YGroup, Separator, Spinner, YStack } from 'tamagui'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
+import { resetSongs, addSongs } from '../features/songs/songSlice';
 
 import { SongItem } from './SongItem'
+import { FlashList } from "@shopify/flash-list";
+import { Image } from 'expo-image';
+
+import { useHeaderHeight } from '@react-navigation/elements';
 
 
 export function Search({ navigation }) {
+    
+
+    // States
     const [loading, setLoading] = useState(false);
+    const [moreLoading, setMoreLoading] = useState(false);
     const [offset, setOffset] = useState(0);
     const [error, setError] = useState(false);
     const [isSave, setIsSave] = useState(false);
     const [empty, setEmpty] = useState(false);
+    const [noMore, setNoMore] = useState(false);
     const [result, setResult] = useState([]);
+    const [height, setHeight] = useState(0);
     
-
+    // Stores
+    const theme = useSelector(state => state.theme.actual);
+    const songs = useSelector(state => state.songs.songs);
+    const dispatch = useDispatch();
 
     const route = useRoute();
+
+    // Altura del header de react-navigation
+    const headerHeight = useHeaderHeight();
+
+    // Param a buscars
     const { originalTermSearch } = route.params
     
     // La API de itunes necesita que los espacios se reemplazen por '+'
     // https://stackoverflow.com/questions/3794919/replace-all-spaces-in-a-string-with
     const termSearch = originalTermSearch.replace(/ /g, '+');
+
+
+    const url = `https://itunes.apple.com/search?term=${termSearch}&country=AR&media=music&entity=song&attribute=artistTerm&limit=50&offset=${offset}`
 
     useEffect(() => {
         // Actualizar el título dinámicamente usando setOptions
@@ -31,7 +53,7 @@ export function Search({ navigation }) {
             title: `Resultados: '${originalTermSearch}'`,
         });
         buscarArtista();
-      }, [originalTermSearch]);
+    }, [originalTermSearch]);
 
       // https://stackoverflow.com/questions/41056761/detect-scrollview-has-reached-the-end
       const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
@@ -40,51 +62,106 @@ export function Search({ navigation }) {
           contentSize.height - paddingToBottom;
       };
 
-      const detectBottom = ({ nativeEvent }) => {
-          if (isCloseToBottom(nativeEvent)) {
-           buscarArtista();
-          }
+      const fetchMore = () => {
+            if(!empty && !error){
+                setOffset(prevOffset => prevOffset + 50)
+                buscarArtista()
+            }
       }
 
     const buscarArtista = () => {
         if (loading) return; // if it's already loading an image, don't try to pull another
-        setLoading(true);
+        if (!isSave) {
+            setLoading(true);
+            dispatch(resetSongs())
+        }
+        else {
+            setMoreLoading(true);
+        }
+
         setError(false)
-        const url = `https://itunes.apple.com/search?term=${termSearch}&country=AR&media=music&entity=song&attribute=artistTerm&limit=30&offset=${offset}`
         fetch(url)
             .then(response => response.json())
             .then(data => { 
-                    if(data.resultCount == 0)
-                        setEmpty(true)
+
+                    if(data.resultCount == 0){
+                        if(offset == 0)
+                            setEmpty(true)
+                        else
+                            setNoMore(true)
+                    }
                     else{
-                        setResult(prevData => [...prevData, ...data.results])
-                        setOffset(prevOffset => prevOffset + 30)                    
+                        if(!error)
+                            dispatch(addSongs(data.results))
                         setIsSave(true)
+
                     }
             })
             .then(_ => setLoading(false))
-            .catch(error => setError(true))
+            .then(_ => setMoreLoading(false))
+            .catch(error => {
+                setError(true)
+                setLoading(false)
+                setMoreLoading(false)
+            })
             
         ;
     };
 
+    const items = ({item}) => 
+        <ListItem
+          hoverTheme
+          pressTheme
+          icon={<Image source={{uri: item.artworkUrl60}} style={{ width: 60, height: 60 }} />}
+          title={item.trackName}
+          subTitle={item.artistName}
+        />
+
+
+
+    const renderEmpty = () => (
+        <View style={{height: height - headerHeight, alignItems: 'center', justifyContent: 'center'}}>
+            <Text style={styles.alertText} >No se encontraron resultados</Text>
+        </View>    
+    )
+
+    const renderFooter = () => (
+        <View style={styles.footerText}>
+            {moreLoading && <Spinner style={styles.centerText} size="large" />}
+            {noMore && <Text>No se encontraron mas resultados</Text>}
+            
+        </View>
+    )
+
+
     return ( 
-        <SafeAreaView style={styles.main}>
-            <ScrollView onScroll={detectBottom} style={styles.scroll} contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}>
+        <SafeAreaView style={styles.main} onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
+            {   loading ?
+                <Spinner style={styles.centerText} size="large" />        
+                : 
+
+                <View style={{flex:1}} >
+                <Theme name={theme}>
+                {error ?
+                <View style={styles.centerText}>
+                    <Text style={styles.alertText} >Hubo un error en la conexion </Text>
+                    <Button onPress={buscarArtista}><Text>Intentar de nuevo</Text></Button>
+                </View> :<FlashList
+                        data={songs}
+                        renderItem={items}
+                        estimatedItemSize={25}
+                        ListEmptyComponent={renderEmpty}
+                        ListFooterComponent={renderFooter}
+                        onEndReachedThreshold={0.4}
+                        onEndReached={fetchMore}
+                    />
                 
-                <View style={{flex: 1}}>
-                        {isSave && <SongItem songs={result} />}
-                        {error && <Text style={loading}>Hubo un error en la conexion</Text>}
-                        <View style={styles.centerText}>
-                            {empty && <Text >No se encontraron resultados resultados</Text>}
-                        </View>
-                </View>            
-                
-                {loading && (
-                        <Spinner style={isSave ? styles.loaded : styles.loading} size="large" />    
-                )} 
-                
-        </ScrollView>
+                }
+                    
+                </Theme>
+                </View>
+            }
+
         </SafeAreaView>
     )
 }
@@ -94,11 +171,8 @@ export default Search;
 const styles = StyleSheet.create({
     main: {
         flex: 1,
+        flexGrow: 1,
         flexDirection: 'column'
-    },
-    scroll: {
-        flex: 1,
-        height: "100%"
     },
     loading: {
         position: 'absolute',
@@ -109,15 +183,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    loaded: {
-        top: 15,
-        bottom: 60,
+    centerText: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    alertText: {
+        width: '85%',
+        fontSize: 20,
+        textAlign: 'center',
+    },
+    footerText: {
+        flex: 1, 
         alignItems: 'center',
         justifyContent: 'center',
+        marginVertical: 10
     },
-    centerText: {
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center'
-    }
 });

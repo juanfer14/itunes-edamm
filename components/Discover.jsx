@@ -9,7 +9,7 @@ import { addFav, removeFav } from '../features/favs/favsSlice';
 
 
 import { useFonts } from "expo-font";
-import { Input, YStack, Text, ScrollView, ListItem, XStack, Button } from 'tamagui'
+import { Theme, Input, YStack, Text, ScrollView, ListItem, XStack, Button } from 'tamagui'
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -21,6 +21,7 @@ export function Discover({ navigation }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const favs = useSelector(state => state.favs.favs);
+  const theme = useSelector(state => state.theme.actual);
   const dispatch = useDispatch();
 
 
@@ -66,18 +67,21 @@ export function Discover({ navigation }) {
         <ScrollView keyboardShouldPersistTaps={'handled'} style={styles.scroll} contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}>
           <YStack style={styles.welcome} alignItems="center" space="$4">
               <Image style={styles.image} source={iconItunes} />
-              <Text style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
+              <Text theme={theme}  style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
               
               <View style={styles.container}>
-                <Input
-                        style={styles.input}
-                        size="$5" 
-                        borderWidth={1} 
-                        placeholder="Ingrese el nombre del artista" 
-                        value={nombreArtista}
-                        onChangeText={(text) => setNombreArtista(text)}
-                        onSubmitEditing={buscarArtista}
-                />
+                <Theme name={theme}>                
+                  <Input
+
+                          style={styles.input}
+                          size="$5" 
+                          borderWidth={1} 
+                          placeholder="Ingrese el nombre del artista" 
+                          value={nombreArtista}
+                          onChangeText={(text) => setNombreArtista(text)}
+                          onSubmitEditing={buscarArtista}
+                  />
+                </Theme>
                 { nombreArtista ? (
                     <TouchableOpacity style={styles.clearButton} onPress={() => setNombreArtista('')} >
                       <Icon name="close" size={40} color="gray" />
