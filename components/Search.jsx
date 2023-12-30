@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { resetSongs, addSongs } from '../features/songs/songSlice';
 
+import axios from 'axios'
+
 import { Input } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -23,6 +25,7 @@ export function Search({ navigation }) {
     const [moreLoading, setMoreLoading] = useState(false);
     const [error, setError] = useState(false);
     const [noMore, setNoMore] = useState(false);
+    const [needMore, setNeedMore] = useState(false);
     const [offset, setOffset] = useState(0);
 
     // Permite ajustar la altura, cuando no se obtienen resultados o hay error 
@@ -53,20 +56,16 @@ export function Search({ navigation }) {
     useEffect( () => {
         setNoMore(false);
         setOffset(0);
-        if(term){
-            console.log(term)
-            
-            console.log(termSearch)
-            if(!error)
-                dispatch(resetSongs());
+        dispatch(resetSongs());
+        if(term && term.length > 0){
             buscarArtista();
         }
-    }, [term]);
+        
+    }, [termSearch]);
 
       
-    const fetchMore = () => {
+    const fetchMore = async () => {
         if(!moreLoading && !noMore && !error){
-            setOffset(prevOffset => prevOffset + 50)
             buscarArtista()
         }
       }
@@ -79,26 +78,43 @@ export function Search({ navigation }) {
             return;
         }
         // Verificar la cantidad de resultados que se retornan
+
         if(data.resultCount == 0 && offset > 0)
             setNoMore(true)
-        else if(data.resultCount > 0)
+        else if(data.resultCount > 0){
             dispatch(addSongs(data.results))
+            setOffset(prevOffset => prevOffset + 50)
+        }
+
+        
+            
     }
 
-    const buscarArtista = () => {
-        if(loading || moreLoading) return;
-        if(songs)
+    const buscarArtista = async() => {
+        //if(loading || moreLoading) return;
+        if(offset > 0){
             setMoreLoading(true);
-        else
+        }
+        else{
+            console.log('reiniciando canciones')
+            
             setLoading(true);
-        console.log('fetcheando')
-        fetch(url)
-            .then(response => response.json())
-            .then(cargarDatos)
-            .catch(error => setError(true))
-            .then(_ => setLoading(false))
-            .then(_ => setMoreLoading(false))      
-        ;
+        }
+
+        try{
+            console.log('fetcheando')
+            console.log(term)
+            console.log(termSearch)
+            const response = await axios.get(url)
+            const data = response.data;
+            cargarDatos(data)
+        } catch(error){
+            setError(true)
+        } finally {
+            setLoading(false);
+            setMoreLoading(false);
+            setNeedMore(false);
+        }
     };
 
     const items = ({item}) => 
@@ -124,10 +140,11 @@ export function Search({ navigation }) {
         </View>
     )
 
-    const cambiarText = useCallback((text) => {
+    const cambiarText = (text) => {
         setNewTerm(text);
         setTermSearch(text.replace(/ /g, '+'));
-    }, [])
+        
+    }
 
     return ( 
         <SafeAreaView style={styles.main} onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
@@ -140,7 +157,7 @@ export function Search({ navigation }) {
                         onChangeText={cambiarText}
                         rightIcon={
                             term ? 
-                            <TouchableOpacity onPress={() => setNewTerm('')} >
+                            <TouchableOpacity onPress={() => cambiarText('')} >
                                 <Icon name="close-circle-outline" size={40} color="gray" />
                             </TouchableOpacity> : null}
                     />

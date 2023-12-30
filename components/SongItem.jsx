@@ -9,6 +9,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { FlashList } from "@shopify/flash-list";
 
+import { useHeaderHeight, ThemeProvider } from '@react-navigation/elements';
 
 export const SongItem = memo(() => {
 
@@ -17,6 +18,12 @@ export const SongItem = memo(() => {
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
   });
 
+  // Permite ajustar la altura, cuando no se obtienen resultados o hay error 
+  const [height, setHeight] = useState(0);
+
+  // Altura del header de react-navigation
+  const headerHeight = useHeaderHeight();
+
   const theme = useSelector(state => state.theme.actual);
   const songs = useSelector(state => state.songs.songs);
 
@@ -24,26 +31,39 @@ export const SongItem = memo(() => {
         <ListItem
           hoverTheme
           pressTheme
-          spaceFlex="true"
           icon={<Image source={{uri: item.artworkUrl60}} style={{ width: 60, height: 60 }} />}
           title={item.trackName}
           subTitle={item.artistName}
         />
+
+  const renderEmpty = () => (
+      <View style={{height: height - headerHeight, alignItems: 'center', justifyContent: 'center'}}>
+          <Text style={styles.alertText}>No se encontraron resultados</Text>
+      </View>    
+  )
+
+
+  const renderFooter = () => (
+      <View style={styles.footerText}>
+          {moreLoading && <Spinner style={styles.centerText} size="large" />}
+          {noMore && <Text>No se encontraron mas resultados</Text>} 
+      </View>
+  )
       
-  
-
-
 
   return (
     loaded ?
-      <Theme name={theme}>
+        <View onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
           <FlashList
             data={songs}
             renderItem={items}
-            estimatedItemSize={50}
-            
+            estimatedItemSize={25}
+            ListEmptyComponent={renderEmpty}
+            ListFooterComponent={this.renderFooter}
+            onEndReachedThreshold={0.4}
+            onEndReached={fetchMore}
           />
-      </Theme>  
+        </View>
     
     
     : null
@@ -55,5 +75,16 @@ export const SongItem = memo(() => {
 
 
 const styles = StyleSheet.create({
+  alertText: {
+        width: '85%',
+        fontSize: 20,
+        textAlign: 'center',
+  },
+  footerText: {
+        flex: 1, 
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 10
+    },
 })
 
