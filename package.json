@@ -20,6 +20,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "@shopify/flash-list": "1.4.3",
     "@tamagui/babel-plugin": "^1.79.12",
+    "@tamagui/colors": "^1.81.2",
     "@tamagui/config": "^1.79.12",
     "@tamagui/core": "^1.79.12",
     "@tamagui/create-theme": "^1.79.12",

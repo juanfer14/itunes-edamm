@@ -71,6 +71,7 @@ export function Discover({ navigation }) {
               
               <View style={styles.container}>
                 <Theme name={theme}>                
+                <Theme name={'blue'}>                
                   <Input
 
                           style={styles.input}
@@ -81,6 +82,7 @@ export function Discover({ navigation }) {
                           onChangeText={(text) => setNombreArtista(text)}
                           onSubmitEditing={buscarArtista}
                   />
+                </Theme>
                 </Theme>
                 { nombreArtista ? (
                     <TouchableOpacity style={styles.clearButton} onPress={() => setNombreArtista('')} >
