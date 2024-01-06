@@ -12,11 +12,14 @@ export const favsSlice = createSlice({
             }
         },
         removeFav: (state, action) => {
-            state.favs = state.favs.filter(fav => fav != action.payload);
+            state.favs = state.favs.filter(fav => fav.trackId != action.payload.trackId);
         },
+        resetFavs: (state, action) => {
+            state.favs = [];
+        }
     },
 });
 
-export const { addFav, removeFav } = favsSlice.actions;
+export const { addFav, removeFav, resetFavs } = favsSlice.actions;
 
 export default favsSlice.reducer;

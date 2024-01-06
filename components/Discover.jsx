@@ -5,11 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FontAwesome } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { addFav, removeFav } from '../features/favs/favsSlice';
+import { setTerm } from '../features/songs/songSlice';
 
 
 import { useFonts } from "expo-font";
 import { Theme, Input, YStack, Text, ScrollView, ListItem, XStack, Button } from 'tamagui'
+
+
 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -22,10 +24,12 @@ export function Discover({ navigation }) {
   const [loading, setLoading] = useState(false);
   const favs = useSelector(state => state.favs.favs);
   const theme = useSelector(state => state.theme.actual);
+  
   const dispatch = useDispatch();
 
+  
 
-  const [nombreArtista, setNombreArtista] = useState(null);
+  const termSearch = useSelector(state => state.songs.termSearch);
 
   // Cargo el icono de la app
   const iconItunes  = require("../assets/icon.png")
@@ -36,7 +40,7 @@ export function Discover({ navigation }) {
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
   });
 
-  useEffect(() => { loadRandomImage(); }, []);
+  useEffect(() => { dispatch(setTerm('')) }, []);
 
   const loadRandomImage = () => {
       if (loading) return; // if it's already loading an image, don't try to pull another
@@ -56,8 +60,8 @@ export function Discover({ navigation }) {
   };
 
   const buscarArtista = () => {
-    console.log(nombreArtista);
-    navigation.navigate('Search', { originalTermSearch: nombreArtista });
+    console.log(termSearch);
+    navigation.navigate('Search');
   }
 
 
@@ -67,64 +71,30 @@ export function Discover({ navigation }) {
         <ScrollView keyboardShouldPersistTaps={'handled'} style={styles.scroll} contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}>
           <YStack style={styles.welcome} alignItems="center" space="$4">
               <Image style={styles.image} source={iconItunes} />
-              <Text theme={theme}  style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
-              
+              <Text style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
               <View style={styles.container}>
-                <Theme name={theme}>                
+                
                 <Theme name={'blue'}>                
-                  <Input
-
-                          style={styles.input}
-                          size="$5" 
-                          borderWidth={1} 
-                          placeholder="Ingrese el nombre del artista" 
-                          value={nombreArtista}
-                          onChangeText={(text) => setNombreArtista(text)}
-                          onSubmitEditing={buscarArtista}
-                  />
+                    <Input
+                            style={styles.input}
+                            size="$5" 
+                            borderWidth={1} 
+                            placeholder="Ingrese el nombre del artista" 
+                            value={termSearch}
+                            onChangeText={(text) => dispatch(setTerm(text))}
+                            onSubmitEditing={buscarArtista}
+                    />
                 </Theme>
-                </Theme>
-                { nombreArtista ? (
-                    <TouchableOpacity style={styles.clearButton} onPress={() => setNombreArtista('')} >
+                { termSearch ? (
+                    <TouchableOpacity style={styles.clearButton} onPress={() => dispatch(setTerm(''))} >
                       <Icon name="close" size={40} color="gray" />
                     </TouchableOpacity>
                   ) : null
                 }
               </View>
-              
-              
 
-
-            
           </YStack>
         </ScrollView>
-
-        {/*}
-        <View style={styles.imageHolder}>
-          {imageUrl && <Image style={styles.image} source={{uri: imageUrl}} />}
-          <TouchableOpacity onPress={_ => { favs.includes(imageUrl) ? dispatch(removeFav(imageUrl)) : dispatch(addFav(imageUrl)) }} style={styles.fav}>
-              <FontAwesome
-                  name={favs.includes(imageUrl) ? 'heart' : 'heart-o'}
-                  size={30}
-                  color='#F00'
-              />
-          </TouchableOpacity>
-        </View>
-        {*/}
-
-        {/*}
-        <View style={styles.footer}>
-          <Button title="Descubrir nueva" onPress={loadRandomImage} />
-          <Button title="Mis favoritas" onPress={() => navigation.navigate('Favs')} />
-        </View>
-
-
-        {loading && (
-          <View style={styles.loading}>
-            <ActivityIndicator size="large" />
-          </View>
-        )}
-        {*/}
       </SafeAreaView>
       : null
     
@@ -159,7 +129,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     flexGrow: 1,
-
+    width: "100%"
   },
   imageHolder: {
     flex: 1,

@@ -1,20 +1,34 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+
 export const songSlice = createSlice({
     name: 'songs',
     initialState: {
-        songs: [],
+        termSearch: '',
+        songSelected: null,
+        isSongSelected: false,
+        songPlayed: null,
+        isPlaying: false,
     },
     reducers: {
-        addSongs: (state, action) => {
-            state.songs.push(...action.payload);
+        setTerm: (state, action) => {
+            state.termSearch = action.payload;
         },
-        resetSongs: (state, action) => {
-            state.songs = [];
+        setSelectedSong: (state, action) => {
+            state.songSelected = action.payload
+        },
+        setIsSongSelected: (state, action) => {
+            state.isSongSelected = action.payload;
+        },
+        setSong: (state, action) => {
+            state.songPlayed = action.payload;
+        },
+        setIsPlaying: (state, action) => {
+            state.isPlaying = action.payload
         }
     },
-});
+})
 
-export const { addSongs, resetSongs } = songSlice.actions;
+export const { setTerm, setSelectedSong, setIsSongSelected, setSong, setIsPlaying} = songSlice.actions;
 
 export default songSlice.reducer;
