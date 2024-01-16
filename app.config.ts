@@ -22,6 +22,7 @@ const config: ExpoConfig = {
     "supportsTablet": true
   },
   "android": {
+    "package": "com.edamm.searchitunes",
     "adaptiveIcon": {
       "foregroundImage": "./assets/adaptive-icon.png",
       "backgroundColor": "#ffffff"
@@ -29,6 +30,21 @@ const config: ExpoConfig = {
   },
   "web": {
     "favicon": "./assets/favicon.png"
+  },
+  plugins: [
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "13.0",
+        },
+      },
+    ],
+  ],
+  "extra": {
+    "eas": {
+      "projectId": "233e50b8-5cc3-48a1-83ba-940fecb1c8cb"
+    }
   }
 };
 

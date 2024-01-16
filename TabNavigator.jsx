@@ -1,5 +1,5 @@
 // Importo metodos de react
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, useColorScheme } from 'react-native';
 
 // Componentes
@@ -17,9 +17,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Obtengo del store, el valor de theme
 import { useSelector, useDispatch } from 'react-redux';
-import { toggle, setTheme } from './features/styles/themeSlice'
+import { toggle, setTheme, setLoading } from './features/styles/themeSlice'
 
 import { Mutex } from 'async-mutex';
+
+import { useMutex } from 'react-context-mutex';
+
+import { Spinner } from 'tamagui'
+import { setLoad } from './features/status/statusSlice';
 
 const mutex = new Mutex();
 
@@ -41,43 +46,72 @@ const searchIcon = ({color, size}) => (
 
 
 
+
 export function TabNavigator(){
+    const [nameIconSwitch, setNameIconSwitch] = useState('moon');
+    const [nameSwitch, setNameSwitch] = useState('Oscuro');
+    const [isLoading, setIsLoading] = useState(false);
     // Dispatch, utilizado para realizar cambios de tema
     const dispatch = useDispatch();
 
-    // El tema que actualmente esta siendo utilizado de la store
-    const theme = useSelector(state => state.theme.actual);
-    // Termino para saber si esta en modo dark o no.
-    const isDark = theme === 'dark';
-    // Color que esta utilizando la barra de estado
-    const colorStatus = isDark ? 'light' : 'dark';
     // Color que actualemnte esta utilizando el sistema
     const deviceColor = useColorScheme();
 
-    // Funcion para alternar el tema actual, segun si el dispositivo cambia 
-    // de modo noche a modo dia
-    const setThemeStore = () => { dispatch(setTheme(deviceColor)); }
+    const isDark = useSelector(state => state.theme.isDark);
+    const loading = useSelector(state => state.theme.loading)
+
+    const MutexRunner = useMutex();
+    const mutex = new MutexRunner('myUniqueKey1');
+
 
     // Cada vez que se cambia el color del sistema, se cambia a ese color
     useEffect(() => { 
-        setThemeStore(); 
+        dispatch(setTheme(deviceColor));
     }, [deviceColor]);
 
-    // Nombre del icono que debe aparecer, para realizar el cambio 
-    // entre modo dia y noche
-    const nameIconSwitch = isDark ? 'moon' : 'sunny';
+    useEffect(() => {
+        const NameIconSwitch = isDark ? 'moon' : 'sunny';
+        const NameColorSwitch = isDark ? 'Oscuro' : 'Claro';
+        setNameIconSwitch(NameIconSwitch);
+        setNameSwitch(NameColorSwitch);
+        
+    }, [isDark])
+
+    useEffect(() => {
+        setIsLoading(loading);
+    }, [loading])
+
 
     // Funcion para cambiar de iconos en modo dia y modo noche
     const switchIcon = ({color, size}) => (
-        <Ionicons name={nameIconSwitch} size={size} color={color} />
+        isLoading ? 
+            <Spinner/>
+        : 
+            <Ionicons name={nameIconSwitch} size={size} color={color} />
     );
 
-    const cambiarTema = async() => await mutex.runExclusive(async () => dispatch(toggle()))
+    const cambiarTema = () => {
+        if(isLoading) return;
+        dispatch(setLoading(true));
+        
+        mutex.run(async () => {
+            mutex.lock();
+            try {
+                dispatch(toggle());   
+                
+            } catch(e){
+                console.log(e);
+            } finally {
+                
+                mutex.unlock();
+                         
+            }
+        })
+    }
 
     // Componente para realizar el intercambio entre modo dia y modo noche
     const tabSwitch = (props) => <TouchableOpacity {...props} onPress={cambiarTema} />
 
-    const nameSwitch = isDark ? 'Noche' : 'Dia';
 
     return (
         <Tab.Navigator initialRouteName="Discover" 
@@ -100,9 +134,6 @@ export function TabNavigator(){
                     tabBarButton: tabOpacity, 
                     tabBarLabel: 'Favoritos',
                     headerShown: true,
-                    
-
-
                 }} 
             />
             <Tab.Screen name="Switch" component={Switch} 

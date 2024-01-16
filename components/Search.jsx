@@ -23,13 +23,14 @@ import { Spinner } from 'tamagui'
 // Importo mutex para sincronismo
 import {Mutex, Semaphore, withTimeout} from 'async-mutex';
 
-
+import { useMutex } from 'react-context-mutex';
 
 
 export function Search({ navigation }) {
     // States
     const [loading, setLoading] = useState(false);
     const [songs, setSongs] = useState([]);
+    const [pos, setPos] = useState([0]);
 
     // Stores
     const error = useSelector(state => state.status.error);
@@ -37,29 +38,37 @@ export function Search({ navigation }) {
     const moreLoading = useSelector(state => state.status.moreLoading);
     const load = useSelector(state => state.status.load)
     // Termino a buscar
-    const term = useSelector(state => state.songs.termSearch)
+    const termSearch = useSelector(state => state.songs.termSearch)
 
-    // La API de itunes necesita que los espacios se reemplazen por '+'
-    // https://stackoverflow.com/questions/3794919/replace-all-spaces-in-a-string-with
-    // URL donde se debe realizar la consulta
-    const url = `https://itunes.apple.com/search?term=${term.replace(/ /g, '+')}&country=AR&media=music&entity=song&attribute=artistTerm&limit=50&offset=${offset}`
     
     // Dispatcher para ejecutar acciones de las stores
     const dispatch = useDispatch();
 
-    
-    
-    const mutex = new Mutex();
-
-    useEffect( () => {
-        dispatch(setSong(null));
-        dispatch(setIsSongSelected(false));
-        buscarArtista();
-    }, [term]);
+    // La API de itunes necesita que los espacios se reemplazen por '+'
+    // https://stackoverflow.com/questions/3794919/replace-all-spaces-in-a-string-with
+    // URL donde se debe realizar la consulta
+    const url = `https://itunes.apple.com/search?term=${termSearch.replace(/ /g, '+')}&country=AR&media=music&entity=song&attribute=artistTerm&limit=50&offset=${offset}`
 
     useEffect(() => {
-        dispatch(setLoad(false))
-        buscarArtista();
+        dispatch(setMoreLoading(false));
+        dispatch(setNoMore(false));
+        dispatch(setError(false));
+    }, [])
+
+    
+    useEffect( () => {
+        const time = setTimeout(async () => {
+            console.log("TERMINO DE BUSQUEDA: " + termSearch);
+            pos[0] = pos[0] + 1
+            buscarArtista(pos[0]);
+        }, 500)
+        
+        return () => clearTimeout(time);        
+    }, [termSearch]);
+
+
+    useEffect(() => {
+        buscarArtista(pos[0]);
     }, [load])
 
       
@@ -78,53 +87,65 @@ export function Search({ navigation }) {
             dispatch(setNoMore(true))
         }
         else if(data.resultCount > 0){
+            // Si no cargo datos, se inicializa el arreglo
+            if(offset === 0)
+                setSongs([...data.results]) 
+            // Sino, se agregan las canciones con las que ya estan disponibles
+            else
+                setSongs(songs => [...songs, ...data.results]) 
+
             dispatch(setOffset(offset + 50))
-            setSongs(songs => [...songs, ...data.results]) 
-        }       
+        }      
     }
 
-    const buscarArtista = async() => {
-        if(term && term.length > 1){
-            await mutex.runExclusive(async () => {
-                if(loading || moreLoading) return;
-                
-                dispatch(setNoMore(false));
+    const buscarArtista = async(miPos) => {
+        
+        console.log("VALOR DE POS: " + miPos);
+        if(termSearch && termSearch.length > 1){
+            console.log("LOADING: " + loading);
+            console.log("MORE_LOADING: " + moreLoading);
+            if(moreLoading) return;
             
-                if(offset > 0){
-                    dispatch(setMoreLoading(true))
-                }
-                else{
-                    setLoading(true);
-                    console.log('reiniciando canciones')
-                    songs.length = 0;
-                }
-                
-                console.log(`el offset es de ${offset}`)
-                
+            dispatch(setNoMore(false));
 
-                await axios.get(url)
-                    .then(res => {
-                        console.log(url)
-                        console.log(term)
+            if(offset > 0 && !loading){
+              dispatch(setMoreLoading(true))
+            }
+            else{
+                setLoading(true);
+                console.log('reiniciando canciones')
+            }
+
+            
+            await axios.get(url, { headers: { 'Cache-Control': 'no-cache' } })
+                .then(res => {
+                    console.log(url)
+                    console.log("TERMINO BUSCADO: " + termSearch);
+                    console.log("POS DE LA BUSQUEDA: " + miPos);
+                    console.log("VALOR DE NUMSEARCH, ANTES DE CARGAR: " + pos[0]);
+                    if(miPos === pos[0]){
                         cargarDatos(res.data)
-                        
-                    })
-                    .catch(error => {
-                        dispatch(setError(true));
-                    })
-
-                setLoading(false)
-                dispatch(setMoreLoading(false))
-            })
-        }
-        
-        
+                    } else {
+                        console.log("TEMINO QUE NO SE CARGO: " + termSearch);
+                        console.log("POS DEL TERMINO QUE NO SE CARGO: " + miPos);
+                    }
+                    
+                })
+                .then(_ => dispatch(setMoreLoading(false)))
+                .then(_ => setLoading(false))
+                .catch(error => {
+                    console.log(error); 
+                    setLoading(false);
+                    dispatch(setMoreLoading(false));
+                })
+                
+        }        
     };
 
     return ( 
         <SafeAreaView style={styles.main}>
             <View style={styles.main}>
-                <InputFetch/>
+                <InputFetch navigation={navigation}/>
                 { 
                     loading ?
                         <Spinner style={styles.centerText} size="large" />        

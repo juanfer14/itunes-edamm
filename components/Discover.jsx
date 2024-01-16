@@ -1,36 +1,32 @@
+// Importo componentes de react y react-native
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Image, Dimensions, ActivityIndicator, TouchableOpacity} from 'react-native';
+import { StyleSheet, View, Image  } from 'react-native';
+
+// Importo componente para asegurar el status-bar
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
-import { FontAwesome } from '@expo/vector-icons';
+// Importo metodos del stores de react-redux
 import { useSelector, useDispatch } from 'react-redux';
+
+// Importo metodo para setear a vacio el string de busqueda
 import { setTerm } from '../features/songs/songSlice';
 
+// Mutex para el renderizado de componentes
+import { useMutex } from 'react-context-mutex';
 
+// Fonts de tamagui
 import { useFonts } from "expo-font";
-import { Theme, Input, YStack, Text, ScrollView, ListItem, XStack, Button } from 'tamagui'
 
+// Componentes de tamagui
+import { Theme, YStack, ScrollView, Button, Text } from 'tamagui'
 
-
+// Icono de busqueda
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-
-
-//import { ChevronRight, Cloud, Moon, Star, Sun } from '@tamagui/lucide-icons'
+import TextTicker from 'react-native-text-ticker'
 
 export function Discover({ navigation }) {
-  const [imageUrl, setImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const favs = useSelector(state => state.favs.favs);
-  const theme = useSelector(state => state.theme.actual);
-  
-  const dispatch = useDispatch();
-
-  
-
-  const termSearch = useSelector(state => state.songs.termSearch);
-
   // Cargo el icono de la app
   const iconItunes  = require("../assets/icon.png")
 
@@ -40,24 +36,24 @@ export function Discover({ navigation }) {
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
   });
 
-  useEffect(() => { dispatch(setTerm('')) }, []);
+  // Status del componente
+  const [theme, setTheme] = useState('');
 
-  const loadRandomImage = () => {
-      if (loading) return; // if it's already loading an image, don't try to pull another
+  // Dispatch para metodos de la store
+  const dispatch = useDispatch();
 
-      // get screen size
-      const width = Math.floor(Dimensions.get('window').width);
-      const height = Math.floor(Dimensions.get('window').height);
+  const isDark = useSelector(state => state.theme.isDark);
+  const termSearch = useSelector(state => state.songs.termSearch);
+  
 
-      // fetch a random image
-      setLoading(true);
-      // fetch returns a Promise, .then handles ok response, .catch handles error. This call is non-blocking
-      fetch(`https://picsum.photos/${width}/${height}`)
-        .then(response => setImageUrl(response.url))
-        .catch(error => console.error(`Oh no! Something went wrong: ${error}`))
-        .then(_ => setLoading(false))
-      ;
-  };
+  useEffect(() => { 
+    dispatch(setTerm(''));
+  }, []);
+
+  useEffect(() => {
+    isDark ? setTheme('white') : setTheme('black');
+  }, [isDark])
+
 
   const buscarArtista = () => {
     console.log(termSearch);
@@ -75,23 +71,25 @@ export function Discover({ navigation }) {
               <View style={styles.container}>
                 
                 <Theme name={'blue'}>                
-                    <Input
-                            style={styles.input}
-                            size="$5" 
-                            borderWidth={1} 
-                            placeholder="Ingrese el nombre del artista" 
-                            value={termSearch}
-                            onChangeText={(text) => dispatch(setTerm(text))}
-                            onSubmitEditing={buscarArtista}
-                    />
+                    <Button
+                      
+                      textAlign='left'
+                      variant="outlined"
+                      style={styles.button}
+                      size="$5"
+                      theme="active"
+                      icon={<Icon name="search" size={24} color={theme} />}
+                      onPress={buscarArtista}
+                    >
+                      <Text fontSize={18}>
+                        Buscar el nombre del artista
+                      </Text>
+                      
+                    </Button>
                 </Theme>
-                { termSearch ? (
-                    <TouchableOpacity style={styles.clearButton} onPress={() => dispatch(setTerm(''))} >
-                      <Icon name="close" size={40} color="gray" />
-                    </TouchableOpacity>
-                  ) : null
-                }
               </View>
+          
+              
 
           </YStack>
         </ScrollView>
@@ -116,61 +114,27 @@ const styles = StyleSheet.create({
   },
   image: {
     resizeMode: "contain",
-    width: "30%",
-    height: "30%",
+    width: "40%",
+    height: "40%",
   },
   text: { 
     fontSize: 40,
-    top: 0,
-    left: 0,
     width: "95%",
     textAlign: 'center',
+    justifyContent: 'center',
+    
   },
-  input: {
+  button: {
     flex: 1,
     flexGrow: 1,
-    width: "100%"
-  },
-  imageHolder: {
-    flex: 1,
-
-  },
-  fav: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 100,
-  },
-  footer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 0,
-  },
-  loading: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
 
-  },
-  clearButton: {
-    position: 'absolute',
-    top: 0,
-    right: 20,
-    padding: 5,
-  },
+  }
 });
 
 export default Discover;

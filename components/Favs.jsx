@@ -1,12 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Dimensions, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-
 import { FlashList } from "@shopify/flash-list";
 
-import { ListItem, Theme, Text } from 'tamagui'
-
+import { ListItem, Theme, Text, XStack } from 'tamagui'
 
 // Importo Image de expo para un mejor rendimiento
 import { Image } from 'expo-image';
@@ -15,25 +13,22 @@ import { Image } from 'expo-image';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { setIsSongSelected } from '../features/songs/songSlice'
-import { resetFavs, removeFav } from '../features/favs/favsSlice';
 
 //import { SongSelected }  from './SongSelected';
 import { setSelectedSong } from '../features/songs/songSlice';
-import SongSelected from './SongSelected';
 
-const DEVICE_WIDTH = Dimensions.get('window').width;
-const COLUMN_WIDTH = Math.floor(DEVICE_WIDTH / 4);
-const IMAGE_WIDTH = COLUMN_WIDTH - 2;
+import { MaterialIcons } from '@expo/vector-icons';
+
 
 export function Favs() {
     // Permite ajustar la altura, cuando no se obtienen resultados o hay error 
     const [height, setHeight] = useState(Dimensions.get('window').height);
+    const [padBot, setPadBot] = useState();
     
 
     // Stores
     const favs = useSelector(state => state.favs.favs);
     const theme = useSelector(state => state.theme.actual);
-    const component = useSelector(state => state.songs.component)
     const isSongSelected = useSelector(state => state.songs.isSongSelected)
 
     // Dispatcher para ejecutar acciones de las stores
@@ -45,16 +40,27 @@ export function Favs() {
         console.log(isSongSelected)
     }
 
+    useEffect(() => {
+        isSongSelected ? setPadBot(70) : setPadBot(0);
+    }, [isSongSelected])
 
+    const explicit = <MaterialIcons name="explicit"  size={20} color={'orange'} />
+
+    const isExplicit = (song) => 
+        <XStack flex={1} flexDirection='row' alignItems="center">
+        {song.trackExplicitness.includes('explicit') ? explicit : null}
+        {<Text numberOfLines={1}>{song.artistName}</Text>}
+        </XStack>
 
     const items = ({item}) => 
         <ListItem
           pressTheme
-          icon={<Image source={{uri: item.artworkUrl60}} style={{ width: 60, height: 60 }} />}
+          icon={<Image source={{uri: item.artworkUrl60.replace("60x60", "120x120")}} style={{ width: 60, height: 60 }} />}
           title={item.trackName}
-          subTitle={item.artistName}
-          onPress={_ => selectSong(item)}
+          subTitle={isExplicit(item)}
+          onPress={() => selectSong(item)}
         />
+
 
     const renderEmpty = () => (
         <View style={{height: height, alignItems: 'center', justifyContent: 'center'}}>
@@ -67,7 +73,7 @@ export function Favs() {
             <Theme name={theme}>  
                 <View style={styles.main}>
                     <FlashList
-                        contentContainerStyle={{paddingBottom: 70}}
+                        contentContainerStyle={{paddingBottom: padBot}}
                         data={favs}
                         renderItem={items}
                         estimatedItemSize={25}
@@ -84,7 +90,7 @@ const styles = StyleSheet.create({
     main: {
         flex: 1,
         flexGrow: 1,
-        flexDirection: 'column'
+        flexDirection: 'column',
     },
     scroll: {
         flex: 1,

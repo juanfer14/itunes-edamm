@@ -4,8 +4,8 @@ import {  View, StyleSheet} from 'react-native'
 
 
 // Importo componente de librerias
-import { Text, ListItem,  Spinner } from 'tamagui'
 
+import { Text, ListItem,  Spinner, XStack, Separator } from 'tamagui'
 // Importo Image de expo para un mejor rendimiento
 import { Image } from 'expo-image';
 
@@ -23,6 +23,10 @@ import { FlashList } from "@shopify/flash-list";
 // Obtengo el header del stack de navegacion
 import { useHeaderHeight } from '@react-navigation/elements';
 
+import { MaterialIcons } from '@expo/vector-icons';
+
+
+import TextTicker from 'react-native-text-ticker'
 
 export const SongItem = memo((props) => {
 
@@ -35,16 +39,22 @@ export const SongItem = memo((props) => {
 
   const dispatch = useDispatch();
 
+  const [padBot, setPadBot] = useState(0);
+
   // Permite ajustar la altura, cuando no se obtienen resultados o hay error 
   const [height, setHeight] = useState(0);
 
   // Altura del header de react-navigation
   const headerHeight = useHeaderHeight();
 
-  //const theme = useSelector(state => state.theme.actual);
+  const isSongSelected = useSelector(state => state.songs.isSongSelected)
+
+
+  const explicit = <MaterialIcons name="explicit" size={20} color='orange' />
 
   useEffect(() => {
-  }, [])
+    isSongSelected ? setPadBot(70) : setPadBot(0);
+  }, [isSongSelected])
   
 
   const moreLoading = useSelector(state => state.status.moreLoading);
@@ -52,6 +62,7 @@ export const SongItem = memo((props) => {
   const offset = useSelector(state => state.status.offset);
   const error = useSelector(state => state.status.error);
   const load = useSelector(state => state.status.load)
+  const term = useSelector(state => state.songs.termSearch)
 
   const selectSong = (song) => {
       console.log('Cancion seleccionada: ' + song.trackName);
@@ -62,23 +73,34 @@ export const SongItem = memo((props) => {
   const fetchMore = () => {
     if(offset > 0 && !moreLoading && !noMore && !error){
         console.log('buscando mas')
-        dispatch(setLoad(true));
+        dispatch(setLoad(!load));
     }
   }
 
-  const items = ({item}) => 
+  const isExplicit = (song) => 
+    <XStack flex={1} flexDirection='row' alignItems="center">
+      {song.trackExplicitness.includes('explicit') ? explicit : null}
+      {<Text numberOfLines={1}>{song.artistName}</Text>}
+    </XStack>
+    
+
+    const items = ({item}) => 
+        item ?
         <ListItem
           pressTheme
-          icon={<Image source={{uri: item.artworkUrl60}} style={{ width: 60, height: 60 }} />}
+          icon={<Image source={{uri: item.artworkUrl60.replace("60x60", "120x120")}} style={{ width: 60, height: 60 }} />}
           title={item.trackName}
-          subTitle={item.artistName}
+          subTitle={isExplicit(item)}
           onPress={_ => selectSong(item)}
         />
+        : null
 
     const renderEmpty = () => (
+        term ? 
         <View style={{height: height - headerHeight, alignItems: 'center', justifyContent: 'center'}}>
             <Text style={styles.alertText}>No se encontraron resultados</Text>
-        </View>    
+        </View>
+        : null    
     )
 
     const renderFooter = () => (
@@ -92,18 +114,16 @@ export const SongItem = memo((props) => {
     loaded && !error ?
         <View style={styles.main} onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
           <FlashList
-            contentContainerStyle={{paddingBottom: 70}}
+            contentContainerStyle={{paddingBottom: padBot}}
             data={songs}
             renderItem={items}
             estimatedItemSize={25}
             ListEmptyComponent={renderEmpty}
             ListFooterComponent={renderFooter}
-            onEndReachedThreshold={0.4}
+            onEndReachedThreshold={0.2}
             onEndReached={fetchMore}
           />
         </View>
-    
-    
     : null
 
   )
@@ -118,9 +138,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   alertText: {
-        width: '85%',
-        fontSize: 20,
-        textAlign: 'center',
+    width: '85%',
+    fontSize: 20,
+    textAlign: 'center',
   },
   centerText: {
     flex: 1,
@@ -128,10 +148,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   footerText: {
-        flex: 1, 
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginVertical: 10
-    },
+    flex: 1, 
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10
+    }
 })
 
