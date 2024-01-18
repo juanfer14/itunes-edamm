@@ -37,7 +37,6 @@ export function Favs() {
     const selectSong = (song) => {
         dispatch(setSelectedSong(song))
         dispatch(setIsSongSelected(true));
-        console.log(isSongSelected)
     }
 
     useEffect(() => {

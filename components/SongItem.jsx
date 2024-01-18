@@ -65,14 +65,13 @@ export const SongItem = memo((props) => {
   const term = useSelector(state => state.songs.termSearch)
 
   const selectSong = (song) => {
-      console.log('Cancion seleccionada: ' + song.trackName);
+      
       dispatch(setIsSongSelected(true));
       dispatch(setSelectedSong(song));
   }
 
   const fetchMore = () => {
     if(offset > 0 && !moreLoading && !noMore && !error){
-        console.log('buscando mas')
         dispatch(setLoad(!load));
     }
   }

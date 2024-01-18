@@ -58,7 +58,6 @@ export function Search({ navigation }) {
     
     useEffect( () => {
         const time = setTimeout(async () => {
-            console.log("TERMINO DE BUSQUEDA: " + termSearch);
             pos[0] = pos[0] + 1
             buscarArtista(pos[0]);
         }, 500)
@@ -100,10 +99,8 @@ export function Search({ navigation }) {
 
     const buscarArtista = async(miPos) => {
         
-        console.log("VALOR DE POS: " + miPos);
         if(termSearch && termSearch.length > 1){
-            console.log("LOADING: " + loading);
-            console.log("MORE_LOADING: " + moreLoading);
+        
             if(moreLoading) return;
             
             dispatch(setNoMore(false));
@@ -113,23 +110,13 @@ export function Search({ navigation }) {
             }
             else{
                 setLoading(true);
-                console.log('reiniciando canciones')
             }
 
             
             await axios.get(url, { headers: { 'Cache-Control': 'no-cache' } })
                 .then(res => {
-                    console.log(url)
-                    console.log("TERMINO BUSCADO: " + termSearch);
-                    console.log("POS DE LA BUSQUEDA: " + miPos);
-                    console.log("VALOR DE NUMSEARCH, ANTES DE CARGAR: " + pos[0]);
-                    if(miPos === pos[0]){
+                    if(miPos === pos[0])
                         cargarDatos(res.data)
-                    } else {
-                        console.log("TEMINO QUE NO SE CARGO: " + termSearch);
-                        console.log("POS DEL TERMINO QUE NO SE CARGO: " + miPos);
-                    }
-                    
                 })
                 .then(_ => dispatch(setMoreLoading(false)))
                 .then(_ => setLoading(false))

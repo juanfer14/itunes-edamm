@@ -19,7 +19,7 @@ import { useMutex } from 'react-context-mutex';
 import { useFonts } from "expo-font";
 
 // Componentes de tamagui
-import { Theme, YStack, ScrollView, Button, Text } from 'tamagui'
+import { Theme, YStack, ScrollView, Button, Text, Square, H1 } from 'tamagui'
 
 // Icono de busqueda
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -56,7 +56,6 @@ export function Discover({ navigation }) {
 
 
   const buscarArtista = () => {
-    console.log(termSearch);
     navigation.navigate('Search');
   }
 
@@ -64,31 +63,26 @@ export function Discover({ navigation }) {
   return (
       loaded ?
       <SafeAreaView style={styles.main}>
-        <ScrollView keyboardShouldPersistTaps={'handled'} style={styles.scroll} contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}>
-          <YStack style={styles.welcome} alignItems="center" space="$4">
-              <Image style={styles.image} source={iconItunes} />
-              <Text style={styles.text} size="$2">Buscador de canciones en Itunes</Text>
-              <View style={styles.container}>
-                
-                <Theme name={'blue'}>                
-                    <Button
-                      
-                      textAlign='left'
-                      variant="outlined"
-                      style={styles.button}
-                      size="$5"
-                      theme="active"
-                      icon={<Icon name="search" size={24} color={theme} />}
-                      onPress={buscarArtista}
-                    >
-                      <Text fontSize={18}>
-                        Buscar el nombre del artista
-                      </Text>
-                      
-                    </Button>
-                </Theme>
-              </View>
-          
+        <ScrollView keyboardShouldPersistTaps={'handled'} style={styles.scroll} contentContainerStyle={{ flex: 1, flexGrow: 1 }}>
+          <YStack style={styles.welcome} alignItems="center" space="$0">
+            <Image style={styles.image} source={iconItunes} />
+            <H1 style={{bottom: 60}}>Buscador de canciones en Itunes</H1>
+            <Theme name={'blue'}>                
+                  <Button
+                    textAlign='left'
+                    variant="outlined"
+                    style={styles.button}
+                    size="$6"
+                    theme="active"
+                    icon={<Icon name="search" size={24} color={theme} />}
+                    onPress={buscarArtista}
+                  >
+                    <Text fontSize={18}>
+                      Buscar el nombre del artista
+                    </Text>
+                    
+                  </Button>
+              </Theme> 
               
 
           </YStack>
@@ -102,39 +96,31 @@ export function Discover({ navigation }) {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    flexDirection: 'row'
+    flexGrow: 1,
+    flexDirection: 'column'
   },
-  scroll: {
-    flex: 1,
-    height: "100%"
+  scroll: { 
+    flex:1,
+    flexGrow: 1,
+    flexDirection: 'column'
   },
   welcome:{
-    flex: 1,
-    top: 30
+    top: -100,
+    flex:1,
+    flexGrow: 1,
+    flexDirection: 'column',
   },
   image: {
     resizeMode: "contain",
-    width: "40%",
-    height: "40%",
-  },
-  text: { 
-    fontSize: 40,
-    width: "95%",
-    textAlign: 'center',
-    justifyContent: 'center',
-    
+    width: "60%",
+    height: "60%",
   },
   button: {
-    flex: 1,
-    flexGrow: 1,
-    width: "100%",
+    width: "95%",
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-
-  }
+  
 });
 
 export default Discover;

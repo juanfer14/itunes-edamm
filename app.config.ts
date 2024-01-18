@@ -19,6 +19,7 @@ const config: ExpoConfig = {
     "**/*"
   ],
   "ios": {
+    "bundleIdentifier": "com.edamm.searchitunes",
     "supportsTablet": true
   },
   "android": {

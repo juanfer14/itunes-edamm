@@ -85,7 +85,6 @@ export function SongSelected({ navigation }){
                     { shouldPlay: false },
                     (status) => {
                         if(status.didJustFinish){
-                            console.log("se esta pausando")
                             dispatch(setIsPlaying(false));
                             sound.pauseAsync();
                             sound.setPositionAsync(0);
@@ -101,8 +100,6 @@ export function SongSelected({ navigation }){
     }
 
     useEffect(() => {
-        // Limpiar el sonido cuando el componente se desmonta
-        console.log('reproduciendo: ' + songSelected?.trackName);           
         dragX.value = 0;
         loadAudio();
         return async () => {
